@@ -9,7 +9,7 @@
 #include "network.h"
 
 
-size_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response_buffer, size_t buffer_size) {
+ssize_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response_buffer, size_t buffer_size) {
     struct sockaddr_in address;
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {

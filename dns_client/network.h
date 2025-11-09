@@ -5,6 +5,6 @@
 #include <stdint.h>
 #include <sys/types.h> // For ssize_t
 
-size_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response_buffer, size_t buffer_size);
+ssize_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response_buffer, size_t buffer_size);
 
 #endif
