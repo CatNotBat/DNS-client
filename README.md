@@ -23,3 +23,25 @@ To compile the project, run the following `gcc` command from the root of the dir
 
 ```bash
 gcc main.c dns_protocol.c network.c utils.c -o dns_client
+
+
+## Example Output
+
+DNS Query Packet for www.google.com (length: 32 bytes):
+Received 48 bytes in response
+IP Address: 142.250.75.100
+---
+DNS Query Packet for www.yahoo.com (length: 31 bytes):
+Received 108 bytes in response
+IP Address: 87.248.119.251
+IP Address: 87.248.119.252
+---
+DNS Query Packet for www.youtube.com (length: 33 bytes):
+Received 163 bytes in response
+IP Address: 142.250.75.46
+IP Address: 142.250.75.110
+IP Address: 142.250.75.78
+IP Address: 142.250.75.206
+IP Address: 142.250.75.174
+IP Address: 142.250.75.142
+---
