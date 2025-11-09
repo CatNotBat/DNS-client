@@ -23,7 +23,7 @@ To compile the project, run the following `gcc` command from the root of the dir
 
 ```bash
 gcc main.c dns_protocol.c network.c utils.c -o dns_client
-
+```
 
 ## Example Output
 
