@@ -8,9 +8,15 @@
 
 #define MAX_DOMAINS 64
 #define PACKET_SIZE 512
+#define QTYPE_AND_QCLASS_SIZE 4
+#define DNS_ANSWER_NAME_SIZE 2
+#define DNS_ANSWER_TYPE_SIZE 2
+#define DNS_ANSWER_CLASS_SIZE 2
+#define DNS_ANSWER_TTL_SIZE 4
+#define DNS_ANSWER_DATA_LENGTH_SIZE 2
 
 typedef struct 
-{
+{   
     char* TLD;
     char* SLD;
     char* subdomain;
@@ -93,7 +99,7 @@ void make_dns_query(const Domain* domain, uint8_t* buffer, size_t* query_length)
     *query_length = offset;
 }
 
-void send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response_buffer, size_t buffer_size) {
+size_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response_buffer, size_t buffer_size) {
     struct sockaddr_in address;
     int sockfd = socket(AF_INET, SOCK_DGRAM, 0);
     if (sockfd < 0) {
@@ -113,6 +119,39 @@ void send_dns_query(const uint8_t* query, size_t query_length, uint8_t* response
         printf("Received %zd bytes in response\n", response_length);
     }
     close(sockfd);
+    return response_length;
+}
+
+void parse_dns_response(const uint8_t* response_buffer, size_t response_length) {
+    DNSHeader* header = (DNSHeader*)response_buffer;
+    uint16_t ancount = ntohs(header->ancount);
+    uint8_t* ptr = response_buffer + sizeof(DNSHeader);
+    while (ptr < response_buffer + response_length) {
+        if (*ptr == 0) {
+            ptr++;
+            break;
+        }
+        ptr += (*ptr) + 1;
+    }
+    ptr += QTYPE_AND_QCLASS_SIZE;
+
+    for (int i = 0; i < ancount; i++) {
+        ptr += DNS_ANSWER_NAME_SIZE;
+        uint16_t type = ntohs(*(uint16_t*)ptr);
+        ptr += DNS_ANSWER_TYPE_SIZE;
+        ptr += DNS_ANSWER_CLASS_SIZE;
+        ptr += DNS_ANSWER_TTL_SIZE;
+        uint16_t data_length = ntohs(*(uint16_t*)ptr);
+        ptr += DNS_ANSWER_DATA_LENGTH_SIZE;
+        if (type == 1 && data_length == 4) {
+             printf("IP Address: %u.%u.%u.%u\n", ptr[0], ptr[1], ptr[2], ptr[3]);
+        }
+        ptr += data_length;
+    }
+    
+
+
+
 }
 
 int main() {
@@ -134,7 +173,8 @@ int main() {
         split_line_to_domain(file_content[i], &domains[i]);
         make_dns_query(&domains[i], query_packet_buffer, &query_length);
         printf("DNS Query Packet for %s (length: %zu bytes):\n", file_content[i], query_length);
-        send_dns_query(query_packet_buffer, query_length, response_packet_buffer, PACKET_SIZE);
+        size_t response_length = send_dns_query(query_packet_buffer, query_length, response_packet_buffer, PACKET_SIZE);
+        parse_dns_response(response_packet_buffer, response_length);
 
         
         
