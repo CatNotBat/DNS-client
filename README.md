@@ -27,6 +27,8 @@ gcc main.c dns_protocol.c network.c utils.c -o dns_client
 
 ## Example Output
 
+```bash
+./dns_client
 DNS Query Packet for www.google.com (length: 32 bytes):
 Received 48 bytes in response
 IP Address: 142.250.75.100
