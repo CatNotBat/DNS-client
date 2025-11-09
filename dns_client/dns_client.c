@@ -3,6 +3,7 @@
 #include <stdlib.h> 
 #include <string.h>
 #include <netinet/in.h>
+#include <sys/time.h>
 #include "dns_client.h"
 #include "utils.h"
 
@@ -14,6 +15,9 @@
 #define DNS_ANSWER_CLASS_SIZE 2
 #define DNS_ANSWER_TTL_SIZE 4
 #define DNS_ANSWER_DATA_LENGTH_SIZE 2
+#define A 1
+#define AAAA 28
+
 
 typedef struct 
 {   
@@ -65,7 +69,7 @@ void split_line_to_domain(const char* line, Domain* domain) {
     free(line_copy);
 }
 
-void make_dns_query(const Domain* domain, uint8_t* buffer, size_t* query_length) {
+void make_dns_query(const Domain* domain, uint8_t* buffer, size_t* query_length, uint16_t qtype) {
     DNSHeader header;
     header.id = htons(0x1234); 
     header.flags = htons(0x0100); 
@@ -89,9 +93,9 @@ void make_dns_query(const Domain* domain, uint8_t* buffer, size_t* query_length)
     }
     buffer[offset++] = 0; 
 
-    uint16_t qtype = htons(1); 
+    uint16_t qtype_net = htons(qtype); 
     uint16_t qclass = htons(1); 
-    memcpy(buffer + offset, &qtype, sizeof(uint16_t));
+    memcpy(buffer + offset, &qtype_net, sizeof(uint16_t));
     offset += sizeof(uint16_t);
     memcpy(buffer + offset, &qclass, sizeof(uint16_t));
     offset += sizeof(uint16_t);
@@ -106,6 +110,11 @@ size_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* respon
         perror("Socket creation failed");
         return;
     }
+    struct timeval tv;
+    tv.tv_sec = 2;
+    tv.tv_usec = 0;
+
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0;
 
     address.sin_family = AF_INET;
     address.sin_port = htons(53);
@@ -146,6 +155,17 @@ void parse_dns_response(const uint8_t* response_buffer, size_t response_length) 
         if (type == 1 && data_length == 4) {
              printf("IP Address: %u.%u.%u.%u\n", ptr[0], ptr[1], ptr[2], ptr[3]);
         }
+        else if (type == 28 && data_length == 16) {
+            printf("IP Address (IPv6): ");
+            uint16_t* seg_ptr = (uint16_t*)ptr;
+            for (int j = 0; j < 8; j++) {
+                printf("%x", ntohs(seg_ptr[j]));
+                if (j < 7) {
+                    printf(":");
+                }
+            }
+            printf("\n");
+        }
         ptr += data_length;
     }
     
@@ -171,7 +191,7 @@ int main() {
         size_t query_length = 0;
 
         split_line_to_domain(file_content[i], &domains[i]);
-        make_dns_query(&domains[i], query_packet_buffer, &query_length);
+        make_dns_query(&domains[i], query_packet_buffer, &query_length, A);
         printf("DNS Query Packet for %s (length: %zu bytes):\n", file_content[i], query_length);
         size_t response_length = send_dns_query(query_packet_buffer, query_length, response_packet_buffer, PACKET_SIZE);
         parse_dns_response(response_packet_buffer, response_length);
