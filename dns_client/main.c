@@ -12,7 +12,7 @@ int main() {
     char* file_content[MAX_DOMAINS]; 
     int line_count = 0;
 
-    fp = fopen("text.txt", "r");
+    fp = fopen("domain_list.txt", "r");
     line_count = read_lines_from_file(file_content, MAX_DOMAINS, fp);
     fclose(fp);
 
