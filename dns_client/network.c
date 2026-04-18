@@ -20,7 +20,7 @@ ssize_t send_dns_query(const uint8_t* query, size_t query_length, uint8_t* respo
     tv.tv_sec = 2;
     tv.tv_usec = 0;
 
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0;
+    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
 
     address.sin_family = AF_INET;
     address.sin_port = htons(53);
