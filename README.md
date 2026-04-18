@@ -1,5 +1,7 @@
 # DNS-client
 
+A DNS resolver written from scratch in C. Builds raw DNS query packets, sends them over UDP to `8.8.8.8`, and parses the response. No libraries — just sockets and RFC 1035.
+
 ## Usage
 
 1.  **Create Domain List:**
@@ -19,10 +21,14 @@
 
 ## Building
 
-To compile the project, run the following `gcc` command from the root of the directory:
+```bash
+make
+```
+
+Or manually:
 
 ```bash
-gcc main.c dns_protocol.c network.c utils.c -o dns_client
+gcc dns_client/main.c dns_client/dns_protocol.c dns_client/network.c dns_client/utils.c -o dns_client_bin
 ```
 
 ## Example Output
